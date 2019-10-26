@@ -1,6 +1,6 @@
 <template>
     <div class="confirm-menu">
-        <h1 class="confirm-menu__content">You win congratulations !!!! restart ?</h1>
+        <h1 class="confirm-menu__content">{{ msg }}</h1>
         <div class="confirm-menu__controllers-wrapper">
             <slot name="control-buttons"></slot>
         </div>
@@ -9,7 +9,10 @@
 
 <script>
     export default {
-        name: "AppConfirmMenu"
+        name: "AppConfirmMenu",
+        props: {
+            'msg': String
+        }
     }
 </script>
 

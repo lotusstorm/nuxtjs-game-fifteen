@@ -1,7 +1,10 @@
 <template>
     <div class="wrapper">
         <transition name="menu">
-            <app-confirm-menu v-show="showConfirmMenu">
+            <app-confirm-menu
+                v-show="showConfirmMenu"
+                :msg="msg"
+            >
                 <template slot="control-buttons">
                     <input
                         type="button"
@@ -19,6 +22,12 @@
         <div class="content">
             <header class="header">
                 <h1 class="header__content">15</h1>
+                <input
+                    type="button"
+                    value="restart"
+                    @click="restart"
+                    class="confirm-button"
+                >
                 <app-display
                     :counter="count"
                 />
@@ -60,6 +69,7 @@
                 count: 0,
                 showConfirmMenu: false,
                 valid: '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0',
+                msg: null,
             }
         },
         computed: {
@@ -125,34 +135,46 @@
                 }
                 return {x, y}
             },
+
+            /**
+             * Показывает скрывает меню
+             * */
+            showMenu() {
+                this.showConfirmMenu = !this.showConfirmMenu;
+                let content = document.getElementById('main');
+                content.classList.toggle('no-action');
+            },
+
             /**
              * Проверяет победил игрок или нет
              * при победе предлагает начать заного
              * */
             isWinner() {
                 if (this.valid === this.view.join(',')) {
-                    let content = document.getElementById('main');
-                    content.classList.toggle('no-action');
-                    this.showConfirmMenu = !this.showConfirmMenu
+                    this.msg = 'You win congratulations !!!! restart ?';
+                    this.showMenu();
                 }
             },
             /**
              * При нажатии на yes начинает игру заного
              * */
             confirm() {
-                this.showConfirmMenu = !this.showConfirmMenu;
                 this.view = this.arrayToMatrix(this.valid.split(',').map(i => Number(i)).sort(() => Math.random()-.5));
                 this.count = 0;
-                let content = document.getElementById('main');
-                content.classList.toggle('no-action');
+                this.showMenu();
             },
             /**
              * При нажатии на no возвращает на игровое поле
              * */
             cancel() {
-                this.showConfirmMenu = !this.showConfirmMenu;
-                let content = document.getElementById('main');
-                content.classList.toggle('no-action');
+                this.showMenu();
+            },
+            /**
+             * При нажатии на restart пердлагает начать заного
+             * */
+            restart() {
+                this.msg = 'Restart ?';
+                this.showMenu();
             },
             /**
              * Меняет местами значения пустой ячейки и выбранного элемента по событию
