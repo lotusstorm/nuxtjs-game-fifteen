@@ -1,0 +1,19 @@
+$text-color: #47494e;
+$header-text-color: orange;
+$wrapper-bg-color: #47494e;
+$operation-bg-color: orange;
+$col-bg-color: lightseagreen;
+$col-bg-color-hover: orange;
+$btn-bg-color: #47494e;
+$btn-text-color: orange;
+$btn-bg-hover-color: orange;
+$btn-text-hover-color:  #47494e;
+
+@mixin large-text {
+    font: {
+        family: Arial;
+        size: 3rem;
+        weight: bold;
+    }
+    color: $text-color;
+}
