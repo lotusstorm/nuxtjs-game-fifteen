@@ -139,7 +139,7 @@
             /**
              * Показывает скрывает меню
              * */
-            togleMenu() {
+            toggleMenu() {
                 this.showConfirmMenu = !this.showConfirmMenu;
                 let content = document.getElementById('main');
                 content.classList.toggle('no-action');
@@ -152,7 +152,7 @@
             isWinner() {
                 if (this.valid === this.view.join(',')) {
                     this.msg = 'You win congratulations !!!! restart ?';
-                    this.togleMenu();
+                    this.toggleMenu();
                 }
             },
             /**
@@ -161,20 +161,20 @@
             confirm() {
                 this.view = this.arrayToMatrix(this.valid.split(',').map(i => Number(i)).sort(() => Math.random()-.5));
                 this.count = 0;
-                this.togleMenu();
+                this.toggleMenu();
             },
             /**
              * При нажатии на no возвращает на игровое поле
              * */
             cancel() {
-                this.togleMenu();
+                this.toggleMenu();
             },
             /**
              * При нажатии на restart пердлагает начать заного
              * */
             restart() {
                 this.msg = 'Restart ?';
-                this.togleMenu();
+                this.toggleMenu();
             },
             /**
              * Меняет местами значения пустой ячейки и выбранного элемента по событию
