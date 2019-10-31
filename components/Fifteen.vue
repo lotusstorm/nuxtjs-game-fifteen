@@ -19,7 +19,7 @@
                 </template>
             </app-confirm-menu>
         </transition>
-        <div class="content">
+        <div :class="['content', {'no-action': showConfirmMenu}]">
             <header class="header">
                 <h1 class="header__content">15</h1>
                 <input
@@ -32,20 +32,13 @@
                     :counter="count"
                 />
             </header>
-            <div class="screen" id="main">
-                <ul
-                    v-for="(row, key) in render"
+            <div class="screen">
+                <div
+                    v-for="(col, key) in view"
                     :key="key"
-                    class="row"
-                >
-                    <app-item
-                        v-for="(col, key) in row"
-                        :key="key"
-                        :id="col"
-                        @event="swap"
-                        :class="[{'disable' : !col}]"
-                    >{{ col }}</app-item>
-                </ul>
+                    @click="swap(key)"
+                    :class="['col', {'disable' : !col}]"
+                >{{ col }}</div>
             </div>
         </div>
     </div>
@@ -53,104 +46,68 @@
 
 <script>
     import Display from '@/components/AppDisplay.vue'
-    import Item from '@/components/AppItem.vue'
     import ConfirmMenu from '@/components/AppConfirmMenu.vue'
 
     export default {
         name: "Fifteen",
         components: {
             'app-display': Display,
-            'app-item': Item,
             'app-confirm-menu': ConfirmMenu,
         },
         data() {
             return {
-                view: this.arrayToMatrix([...Array(16).keys()].sort(() => Math.random()-.5)),
+                view: [...Array(16).keys()].sort(() => Math.random()-.5),
                 count: 0,
                 showConfirmMenu: false,
-                valid: '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0',
+                valid: [...[...Array(16).keys()].slice(1), 0],
                 msg: null,
             }
         },
-        computed: {
-            render() {
-                return this.view;
-            },
-        },
         methods: {
             /**
-             * Превращает массив в многомерную матрицу 4x4
+             * Получает левую и правую границу поля
              * @param arr: массив с элементами
+             * @param count: шаг
              * */
-            arrayToMatrix(arr) {
-                let newArr = [];
-                let start = 0;
-                let end = 4;
-                for (let i=0; i<arr.length/4; i++) {
-                    if (end <= arr.length) {
-                        newArr.push(arr.slice(start, end));
-                        start += 4;
-                        end += 4;
+            getBorders(arr, count) {
+                let borders = {left: [], right: []};
+                let border = 0;
+                for (let i=0; i<Math.ceil(arr.length/count); i++) {
+                    if (border <= arr.length) {
+                        border += count;
+                        borders.left.push(border);
+                        borders.right.push(border-1);
                     }
                 }
-                return newArr
+                return borders
             },
-
             /**
              * Валидирует координаты что бы не выйти за пределы игрового поля
-             * @param x: воя координата
-             * @param y: своя координата
-             * @param matrix: игровое поле
+             * @param x: index елемента
+             * @param arr: массив
              * */
-            validCoords(x, y, matrix) {
+            validCoords(x, arr) {
+                let {left, right} = this.getBorders(arr, 4);
                 return {
-                    top: x - 1 >= 0 ? x - 1 : x,
-                    bottom: x + 1 < matrix.length ? x + 1 : x,
-                    left: y - 1 >= 0 ? y - 1 : y,
-                    right: y + 1 < matrix[0].length ? y + 1 : y
+                    top: x - 4 >= 0 ? x - 4 : x,
+                    bottom: x + 4 < arr.length ? x + 4 : x,
+                    right: x - 1 >= 0 && !right.includes(x - 1) ? x - 1 : x,
+                    left: x + 1 < arr.length && !left.includes(x + 1) ? x + 1 : x
                 }
             },
-            /**
-             * Возвращает координаты пустой ячейки если она рядом или свои координаты
-             * @param top: корректные координаты верхней ячейки
-             * @param bottom: корректные координаты нижней ячейки
-             * @param left: корректные координаты левой ячейки
-             * @param right: корректные координаты правой ячейки
-             * @param x: своя координата
-             * @param y: своя координата
-             * @param matrix: игровое поле
-             * */
-            getCoords({top, bottom, left, right}, x, y, matrix) {
-                let coords = {
-                    [`${top}.${y}`]: matrix[top][y],
-                    [`${bottom}.${y}`]: matrix[bottom][y],
-                    [`${x}.${left}`]: matrix[x][left],
-                    [`${x}.${right}`]: matrix[x][right],
-                };
-
-                for (let i in coords) {
-                    if (!coords[i]) {
-                        return {x: i.split('.')[0], y: i.split('.')[1]}
-                    }
-                }
-                return {x, y}
-            },
-
             /**
              * Показывает скрывает меню
              * */
             toggleMenu() {
                 this.showConfirmMenu = !this.showConfirmMenu;
-                let content = document.getElementById('main');
-                content.classList.toggle('no-action');
             },
-
             /**
              * Проверяет победил игрок или нет
              * при победе предлагает начать заного
              * */
             isWinner() {
-                if (this.valid === this.view.join(',')) {
+
+                if (this.view.map((el, ind) => el === this.valid[ind]).every(x => x)) {
                     this.msg = 'You win congratulations !!!! restart ?';
                     this.toggleMenu();
                 }
@@ -159,7 +116,7 @@
              * При нажатии на yes начинает игру заного
              * */
             confirm() {
-                this.view = this.arrayToMatrix(this.valid.split(',').map(i => Number(i)).sort(() => Math.random()-.5));
+                this.view = this.view.sort(() => Math.random()-.5);
                 this.count = 0;
                 this.toggleMenu();
             },
@@ -177,21 +134,15 @@
                 this.toggleMenu();
             },
             /**
-             * Меняет местами значения пустой ячейки и выбранного элемента по событию
-             * @param e событие клика
+             * Меняет местами значения пустой ячейки и выбранного элемента
+             * @param x: index елемента
              * */
-            swap(e) {
-                outer: for (let i=0; i<this.view.length; i++) {
-                    for (let j=0; j<this.view[i].length; j++) {
-                        if (Number(e.target.getAttribute('data-id')) === this.view[i][j]) {
-                            let coords = this.validCoords(i, j, this.view);
-                            let {x, y} = this.getCoords(coords, i, j, this.view);
-                            if (x !== i && y !== j) {
-                                this.count++;
-                                [this.view[x][y], this.view[i][j]]= [this.view[i][j], this.view[x][y]];
-                            }
-                            break outer;
-                        }
+            swap(x) {
+                let coords = this.validCoords(x, this.view);
+                for (let key of Object.values(coords)) {
+                    if (!this.view[key]) {
+                        this.count++;
+                        [this.view[x], this.view[key]] = [this.view[key], this.view[x]];
                     }
                 }
                 this.isWinner();
@@ -225,10 +176,26 @@
         }
 
         .screen {
-            .row {
+            display: flex;
+            justify-content: center;
+            flex-flow: wrap;
+            width: 420px;
+
+            .col {
                 display: flex;
-                flex-flow: row;
-                padding: 0;
+                background-color: $col-bg-color;
+                width: 100px;
+                height: 100px;
+                align-items: center;
+                justify-content: center;
+                margin: 2px;
+                border-radius: 5px;
+                cursor: pointer;
+                @include large-text;
+
+                &:hover {
+                    background-color: $col-bg-color-hover;
+                }
             }
         }
     }
