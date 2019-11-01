@@ -142,7 +142,8 @@
                 for (let key of Object.values(coords)) {
                     if (!this.view[key]) {
                         this.count++;
-                        [this.view[x], this.view[key]] = [this.view[key], this.view[x]];
+                        this.view.splice(key, 1, this.view[x]);
+                        this.view.splice(x, 1, 0);
                     }
                 }
                 this.isWinner();
